@@ -1,435 +1,280 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive UPSC Syllabus Explorer</title>
+    <title>Dynamic UPSC Syllabus Explorer</title>
+    <!-- Framework & Library CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chosen Palette: Cool Slate & Cobalt -->
-    <!-- Application Structure Plan: The application is structured as a single-page dashboard with a fixed sidebar for primary navigation (Prelims, Mains, Interview) and a main content area. This structure was chosen to provide immediate access to the different stages of the exam without overwhelming the user with a long scrollable page. The content within each section is organized into interactive accordions, allowing users to drill down from papers to subjects and then to specific topics. This hierarchical drill-down method is highly intuitive for exploring a dense, structured document like a syllabus. A key interaction is the live search bar, which highlights keywords across the entire syllabus, transforming the static text into a powerful study tool for finding and connecting topics. This design prioritizes usability and efficient information retrieval over a literal one-to-one mapping of the source document's linear layout. -->
-    <!-- Visualization & Content Choices: Report Info: UPSC Exam Structure. Goal: Provide a quick, high-level overview of the Mains examination components. Viz/Presentation Method: Doughnut Chart. Interaction: Hovering over segments shows the paper count. Justification: A visual chart is more engaging and easier to digest than a list of papers, immediately communicating the exam's composition. Library/Method: Chart.js (Canvas). Report Info: Detailed Syllabus Text. Goal: Organize and present dense hierarchical information clearly. Viz/Presentation Method: Nested Accordions. Interaction: Clicking headers expands or collapses sections to reveal details on demand. Justification: Prevents information overload and allows users to focus on one section at a time. Library/Method: HTML/CSS/JS. Report Info: Entire Syllabus. Goal: Allow users to quickly find specific topics. Viz/Presentation Method: Search Bar with Highlighting. Interaction: As the user types, matching text is highlighted in real-time. Justification: This is a critical feature for a study tool, enabling efficient topic search and cross-referencing. Library/Method: JS. -->
+    
+    <!-- Chosen Palette: Midnight Bloom (Deep Indigo, Soft Lavender, Gold Accent) -->
+    <!-- Application Structure Plan: The application is now a single, linear, scrollable page built with React. The previous sidebar navigation is replaced by a clear, top-down information flow (Header -> Prelims -> Mains -> Interview -> Footer). This structure is more intuitive for content discovery on both mobile and desktop, encouraging exploration through scrolling. Content is grouped into visually distinct sections with animations that trigger on scroll, enhancing engagement. Each syllabus topic is presented in an interactive accordion card, allowing users to progressively disclose information without being overwhelmed. This design prioritizes a modern, clean aesthetic and a guided, narrative-like user experience. -->
+    <!-- Visualization & Content Choices: Report Info: UPSC Exam Structure. Goal: Provide a quick, high-level overview of the Mains exam. Viz/Presentation Method: Doughnut Chart within a React component. Interaction: Hovering over segments reveals details. Justification: A chart visually breaks up the text-heavy content and offers an immediate, digestible summary of the exam's composition. Library/Method: Chart.js (Canvas) integrated into a React `useEffect` hook. Report Info: Detailed Syllabus Text. Goal: Organize dense, hierarchical information. Viz/Presentation Method: Interactive Accordion Cards (React components). Interaction: Clicking a card header smoothly expands/collapses the detailed syllabus points. Checkboxes allow for progress tracking. Justification: This component-based approach is ideal for managing state (open/closed, checked/unchecked) efficiently in React and creates a clean, reusable UI element. Library/Method: React State (`useState`) for accordions, `localStorage` for checkbox persistence. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-        }
-        .content-section {
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .content-section.active {
-            display: block;
+            scroll-behavior: smooth;
         }
         .accordion-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.4s ease-in-out;
+            transition: max-height 0.5s ease-in-out;
         }
         .accordion-button.active + .accordion-content {
-            max-height: 10000px; /* Increased for more content */
+            max-height: 2000px;
         }
         .accordion-button .arrow {
             transition: transform 0.3s ease-in-out;
         }
         .accordion-button.active .arrow {
-            transform: rotate(90deg);
+            transform: rotate(180deg);
         }
-        .highlight {
-            background-color: #fef08a; /* Tailwind yellow-200 */
-            border-radius: 3px;
-            padding: 0 3px;
-            font-weight: 500;
-        }
-        .task-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            transition: color 0.3s;
-        }
-        .task-checkbox {
-            margin-top: 6px;
-        }
-        .task-checkbox:checked + .task-label {
-            text-decoration: line-through;
-            color: #64748b; /* slate-500 */
-        }
-        #toTopBtn {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 30px;
-            z-index: 99;
-            transition: opacity 0.3s, transform 0.3s;
+        .fade-in-section {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
         }
-        #toTopBtn.show {
-            display: block;
+        .fade-in-section.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .task-checkbox:checked + .task-label {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-900 text-white">
 
-    <div class="flex flex-col md:flex-row min-h-screen">
-        <aside class="w-full md:w-64 bg-white border-r border-slate-200 p-6 shadow-md md:sticky top-0 h-auto md:h-screen">
-            <h1 class="text-2xl font-bold text-blue-600 mb-2">UPSC Explorer</h1>
-            <p class="text-sm text-slate-500 mb-8">Your interactive guide to the Civil Services Exam syllabus.</p>
-            <nav>
-                <ul class="space-y-2">
-                    <li><a href="#prelims" class="nav-link active font-semibold text-base block py-2 px-4 rounded-lg bg-blue-50 text-blue-700">Preliminary Exam</a></li>
-                    <li><a href="#mains" class="nav-link font-semibold text-base block py-2 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors">Mains Exam</a></li>
-                    <li><a href="#interview" class="nav-link font-semibold text-base block py-2 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors">Personality Test</a></li>
-                </ul>
-            </nav>
-            <div class="mt-10">
-                <label for="search" class="block text-sm font-medium text-slate-600 mb-2">Search Syllabus</label>
-                <input type="text" id="search" placeholder="e.g., globalization" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-            </div>
-        </aside>
+    <div id="root"></div>
 
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const syllabusData = {
+            prelims: {
+                gs: [
+                    { id: 'pre-gs-1', text: 'Current events of national and international importance.' },
+                    { id: 'pre-gs-2', text: 'History of India and Indian National Movement.' },
+                    { id: 'pre-gs-3', text: 'Indian and World Geography - Physical, Social, Economic.' },
+                    { id: 'pre-gs-4', text: 'Indian Polity and Governance - Constitution, Political System, etc.' },
+                    { id: 'pre-gs-5', text: 'Economic and Social Development - Sustainable Development, Poverty, Inclusion, etc.' },
+                    { id: 'pre-gs-6', text: 'General issues on Environmental ecology, Bio-diversity and Climate Change.' },
+                    { id: 'pre-gs-7', text: 'General Science.' },
+                ],
+                csat: [
+                    { id: 'pre-csat-1', text: 'Comprehension' },
+                    { id: 'pre-csat-2', text: 'Interpersonal skills including communication skills' },
+                    { id: 'pre-csat-3', text: 'Logical reasoning and analytical ability' },
+                    { id: 'pre-csat-4', text: 'Decision making and problem-solving' },
+                    { id: 'pre-csat-5', text: 'General mental ability' },
+                    { id: 'pre-csat-6', text: 'Basic numeracy (Class X level)' },
+                    { id: 'pre-csat-7', text: 'Data interpretation (Class X level)' },
+                ]
+            },
+            mains: [
+                { id: 'mains-1', title: 'Paper I: Essay', content: 'Candidates will write essays on various topics, focusing on orderly arrangement of ideas and concise writing. Credit is given for effective expression.' },
+                { id: 'mains-2', title: 'Paper II: General Studies I', content: 'Covers Indian Heritage and Culture, History (Modern Indian & World), Geography of the World, and Society.' },
+                { id: 'mains-3', title: 'Paper III: General Studies II', content: 'Covers Governance, Constitution, Polity, Social Justice, and International Relations.' },
+                { id: 'mains-4', title: 'Paper IV: General Studies III', content: 'Covers Technology, Economic Development, Biodiversity, Environment, Security, and Disaster Management.' },
+                { id: 'mains-5', title: 'Paper V: General Studies IV', content: 'Focuses on Ethics, Integrity, and Aptitude, including case studies on these issues.' },
+                { id: 'mains-6', title: 'Papers VI & VII: Optional Subject I & II', content: 'Two papers on one optional subject chosen by the candidate from a prescribed list.' },
+            ]
+        };
+
+        const AnimatedSection = ({ children }) => {
+            const domRef = useRef();
+            const [isVisible, setVisible] = useState(false);
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(entries => {
+                    if (entries[0].isIntersecting) {
+                        setVisible(true);
+                        observer.unobserve(domRef.current);
+                    }
+                });
+                observer.observe(domRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            return (
+                <div ref={domRef} className={`fade-in-section ${isVisible ? 'is-visible' : ''} mb-16`}>
+                    {children}
+                </div>
+            );
+        };
+        
+        const AccordionItem = ({ title, children, id }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [isChecked, setIsChecked] = useState(false);
             
-            <section id="prelims" class="content-section active">
-                <h2 class="text-4xl font-bold mb-3 text-slate-900">Preliminary Examination</h2>
-                <p class="mb-8 text-slate-600 max-w-3xl">The Preliminary stage is the first hurdle, consisting of two objective-type papers. Performance in Paper I determines the cut-off for the Mains, while Paper II (CSAT) is qualifying in nature. Use the sections below to explore the detailed syllabus for each paper.</p>
-                
-                <div class="space-y-4">
-                    <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center">
-                            <span>Paper I: General Studies (200 Marks)</span>
-                            <span class="arrow text-blue-600 text-2xl font-light">▸</span>
-                        </button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600">
-                            <div class="pt-4 border-t border-slate-200 space-y-3">
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-1" class="task-label">Current events of national and international importance.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-2" class="task-label">History of India and Indian National Movement.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-3" class="task-label">Indian and World Geography - Physical, Social, Economic Geography of India and the World.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-4" class="task-label">Indian Polity and Governance - Constitution, Political System, Panchayati Raj, Public Policy, Rights Issues, etc.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-5" class="task-label">Economic and Social Development - Sustainable Development, Poverty, Inclusion, Demographics, Social Sector initiatives, etc.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-6" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-6" class="task-label">General issues on Environmental ecology, Bio-diversity and Climate Change - that do not require subject specialization.</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-gs-7" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-gs-7" class="task-label">General Science.</label></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:show-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center">
-                            <span>Paper II: CSAT (Qualifying - 200 Marks)</span>
-                             <span class="arrow text-blue-600 text-2xl font-light">▸</span>
-                        </button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600">
-                            <div class="pt-4 border-t border-slate-200 space-y-3">
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-1" class="task-label">Comprehension</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-2" class="task-label">Interpersonal skills including communication skills</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-3" class="task-label">Logical reasoning and analytical ability</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-4" class="task-label">Decision making and problem-solving</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-5" class="task-label">General mental ability</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-6" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-6" class="task-label">Basic numeracy (Class X level)</label></div>
-                                <div class="task-item"><input type="checkbox" id="prelim-csat-7" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="prelim-csat-7" class="task-label">Data interpretation (Class X level)</label></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="mains" class="content-section">
-                <h2 class="text-4xl font-bold mb-3 text-slate-900">Mains Examination</h2>
-                <p class="mb-8 text-slate-600 max-w-3xl">The Mains Examination is the descriptive stage, designed to assess the depth of your understanding. It consists of nine papers, including two qualifying language papers and seven merit-based papers. The chart below provides a visual breakdown of the merit papers.</p>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                    <div class="lg:col-span-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-xl font-semibold mb-4 text-center">Mains Merit Papers Breakdown</h3>
-                         <div class="chart-container relative w-full max-w-xs mx-auto h-64 md:h-72">
-                            <canvas id="mainsChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-xl font-semibold mb-4">Qualifying Papers (Non-Merit)</h3>
-                        <p class="mb-4 text-slate-600">These papers test your proficiency in English and an Indian language of your choice. Marks are not counted for the final ranking, but clearing them is mandatory.</p>
-                        <div class="space-y-3">
-                            <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                                <p class="font-semibold">Paper A: Indian Language (300 Marks)</p>
-                                <p class="text-sm text-slate-500">Comprehension, Précis, Vocabulary, Essay, Translation.</p>
-                            </div>
-                            <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                                <p class="font-semibold">Paper B: English (300 Marks)</p>
-                                <p class="text-sm text-slate-500">Comprehension, Précis, Vocabulary, Essay.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h3 class="text-3xl font-bold mb-4 mt-10">Merit Papers Syllabus</h3>
-                <div class="space-y-4">
-                     <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Paper I: Essay (250 Marks)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3"><div class="task-item"><input type="checkbox" id="mains-essay-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-essay-1" class="task-label">Candidates will be expected to keep closely to the subject of the essay, arrange their ideas in an orderly fashion, and write concisely. Credit will be given for effective and exact expression.</label></div></div></div>
-                    </div>
-                    <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Paper II: General Studies I (250 Marks)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3">
-                            <div class="task-item"><input type="checkbox" id="mains-gs1-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs1-1" class="task-label"><b>Indian Culture:</b> Salient aspects of Art Forms, literature, and Architecture from ancient to modern times.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs1-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs1-2" class="task-label"><b>Modern Indian History:</b> Mid-18th century until present - significant events, personalities, issues. The Freedom Struggle. Post-independence consolidation.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs1-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs1-3" class="task-label"><b>World History:</b> Industrial Revolution, world wars, redrawal of national boundaries, colonization, decolonization, political philosophies (communism, capitalism, socialism).</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs1-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs1-4" class="task-label"><b>Indian Society:</b> Diversity, role of women, population issues, poverty, urbanization, globalization effects, social empowerment, communalism, regionalism & secularism.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs1-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs1-5" class="task-label"><b>Geography:</b> World physical geography, distribution of key natural resources, factors for location of industries, important geophysical phenomena (earthquakes, Tsunami, cyclones).</label></div>
-                        </div></div>
-                    </div>
-                    <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Paper III: General Studies II (250 Marks)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3">
-                             <div class="task-item"><input type="checkbox" id="mains-gs2-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs2-1" class="task-label"><b>Indian Constitution:</b> Historical basis, evolution, features, amendments, basic structure, functions of Union/States, federal structure, separation of powers, comparison with other countries.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs2-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs2-2" class="task-label"><b>Polity:</b> Parliament & State Legislatures, Executive & Judiciary, Representation of People’s Act, Constitutional posts and bodies (statutory, regulatory, quasi-judicial).</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs2-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs2-3" class="task-label"><b>Governance:</b> Government policies and interventions, role of NGOs & SHGs, transparency, accountability, e-governance, citizen's charters, role of civil services.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs2-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs2-4" class="task-label"><b>Social Justice:</b> Welfare schemes for vulnerable sections, issues of Health, Education, Human Resources, poverty, and hunger.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs2-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs2-5" class="task-label"><b>International Relations:</b> India and its neighborhood, bilateral & global groupings, effect of policies of developed/developing countries, Indian diaspora, International institutions.</label></div>
-                        </div></div>
-                    </div>
-                     <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Paper IV: General Studies III (250 Marks)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3">
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-1" class="task-label"><b>Indian Economy:</b> Planning, mobilization of resources, growth, development, employment, inclusive growth, Government Budgeting.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-2" class="task-label"><b>Agriculture:</b> Cropping patterns, irrigation, farm subsidies, PDS, food security, food processing, land reforms.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-3" class="task-label"><b>Economy & Infrastructure:</b> Liberalization effects, industrial policy, infrastructure (Energy, Ports, Roads, etc.), investment models.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-4" class="task-label"><b>Science & Technology:</b> S&T developments and applications, achievements of Indians, indigenization, awareness in IT, Space, Computers, robotics, nano-tech, bio-tech, IPR.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-5" class="task-label"><b>Environment & Disaster Management:</b> Conservation, pollution, degradation, EIA, disaster management.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs3-6" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs3-6" class="task-label"><b>Security:</b> Linkages between development and extremism, internal security challenges (external state/non-state actors, communication networks, cyber security, money-laundering), border area security, organized crime, security forces and their mandate.</label></div>
-                        </div></div>
-                    </div>
-                    <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Paper V: General Studies IV (250 Marks)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3">
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-1" class="task-label"><b>Ethics and Human Interface:</b> Essence, determinants and consequences; dimensions of ethics; ethics in private and public relationships; Human Values.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-2" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-2" class="task-label"><b>Attitude:</b> Content, structure, function; influence on thought and behaviour; moral and political attitudes.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-3" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-3" class="task-label"><b>Aptitude & Foundational Values for Civil Service:</b> Integrity, impartiality, non-partisanship, objectivity, dedication, empathy, tolerance, compassion.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-4" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-4" class="task-label"><b>Emotional Intelligence:</b> Concepts and application in administration.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-5" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-5" class="task-label"><b>Moral Thinkers:</b> Contributions from India and the world.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-6" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-6" class="task-label"><b>Public Service Values & Ethics in Administration:</b> Status, problems, ethical dilemmas, laws, rules, conscience, accountability, ethical governance.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-7" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-7" class="task-label"><b>Probity in Governance:</b> Public service concept, RTI, Codes of Ethics/Conduct, Citizen’s Charters, work culture, utilization of funds, corruption challenges.</label></div>
-                            <div class="task-item"><input type="checkbox" id="mains-gs4-8" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-gs4-8" class="task-label"><b>Case Studies</b> on the above issues.</label></div>
-                        </div></div>
-                    </div>
-                     <div class="accordion-item bg-white rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg">
-                        <button class="accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center"><span>Papers VI & VII: Optional Subject I & II (250 Marks each)</span><span class="arrow text-blue-600 text-2xl font-light">▸</span></button>
-                        <div class="accordion-content px-5 pb-5 text-slate-600"><div class="pt-4 border-t border-slate-200 space-y-3"><div class="task-item"><input type="checkbox" id="mains-opt-1" class="task-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"><label for="mains-opt-1" class="task-label">Candidates may choose one optional subject from a list of 26 subjects, including engineering, humanities, sciences, and literature. Each subject has two papers.</label></div></div></div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="interview" class="content-section">
-                <h2 class="text-4xl font-bold mb-3 text-slate-900">Personality Test (Interview)</h2>
-                <p class="mb-8 text-slate-600 max-w-3xl">The final stage of the selection process is the Personality Test, which carries 275 marks. This is not just a test of knowledge, but an assessment of your overall personality, suitability for public service, and mental acuity.</p>
-                <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-2xl font-semibold mb-4">Objective of the Interview</h3>
-                    <p class="mb-6 text-slate-600">The objective of the interview is to assess the personal suitability of the candidate for a career in public service by a Board of competent and unbiased observers. The test is intended to judge the mental caliber of a candidate. In broad terms, this is really an assessment of not only their intellectual qualities but also social traits and their interest in current affairs.</p>
-                     <h3 class="text-2xl font-semibold my-4">Qualities to be Judged</h3>
-                    <ul class="list-disc list-inside space-y-3 text-slate-600 text-lg">
-                        <li>Mental alertness</li>
-                        <li>Critical powers of assimilation</li>
-                        <li>Clear and logical exposition</li>
-                        <li>Balance of judgement</li>
-                        <li>Variety and depth of interest</li>
-                        <li>Ability for social cohesion and leadership</li>
-                        <li>Intellectual and moral integrity</li>
-                    </ul>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <button id="toTopBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-3 rounded-full shadow-lg transition-transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
-    </button>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const navLinks = document.querySelectorAll('.nav-link');
-            const contentSections = document.querySelectorAll('.content-section');
-            const accordionButtons = document.querySelectorAll('.accordion-button');
-            const searchInput = document.getElementById('search');
-            const toTopBtn = document.getElementById('toTopBtn');
-            const mainContent = document.querySelector('main');
-
-            const originalContent = new Map();
-            document.querySelectorAll('.accordion-content').forEach((el) => {
-                originalContent.set(el, el.innerHTML);
-            });
-
-            function updateActiveLink(targetId) {
-                navLinks.forEach(link => {
-                    link.classList.remove('active', 'bg-blue-50', 'text-blue-700');
-                    if (link.getAttribute('href') === `#${targetId}`) {
-                        link.classList.add('active', 'bg-blue-50', 'text-blue-700');
-                    }
-                });
-            }
-
-            function showContent(targetId) {
-                contentSections.forEach(section => {
-                    section.classList.remove('active');
-                    if (section.id === targetId) {
-                        section.classList.add('active');
-                    }
-                });
-            }
-
-            navLinks.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href').substring(1);
-                    updateActiveLink(targetId);
-                    showContent(targetId);
-                    mainContent.scrollTo(0, 0);
-                });
-            });
-
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.accordion-button')) {
-                    e.target.closest('.accordion-button').classList.toggle('active');
+            useEffect(() => {
+                const savedState = localStorage.getItem(`progress_${id}`);
+                if (savedState) {
+                    setIsChecked(JSON.parse(savedState));
                 }
-            });
+            }, [id]);
 
-            function handleSearch() {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                
-                originalContent.forEach((html, el) => {
-                    el.innerHTML = html; 
-                    addCheckboxListeners(el);
-                });
+            const handleToggle = () => setIsOpen(!isOpen);
 
-                if (searchTerm === '') {
-                    loadProgress();
-                    return;
-                }
+            const handleCheckboxChange = (e) => {
+                e.stopPropagation(); // Prevent accordion from toggling
+                const checked = e.target.checked;
+                setIsChecked(checked);
+                localStorage.setItem(`progress_${id}`, JSON.stringify(checked));
+            };
 
-                const regex = new RegExp(searchTerm, 'gi');
+            return (
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                    <button onClick={handleToggle} className={`accordion-button w-full text-left p-5 font-semibold text-lg flex justify-between items-center transition-colors hover:bg-slate-700/50 ${isOpen ? 'active bg-slate-700/50' : ''}`}>
+                        <div className="flex items-center">
+                            <input type="checkbox" onChange={handleCheckboxChange} checked={isChecked} onClick={e => e.stopPropagation()} className="h-5 w-5 mr-4 rounded border-slate-500 text-indigo-500 focus:ring-indigo-500 bg-transparent" />
+                            <span className={`task-label ${isChecked ? 'line-through text-slate-500' : ''}`}>{title}</span>
+                        </div>
+                        <span className="arrow text-indigo-400 text-2xl transform">▼</span>
+                    </button>
+                    <div className="accordion-content">
+                        <div className="px-5 pb-5 pt-2 text-slate-300 border-t border-slate-700">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
-                originalContent.forEach((html, el) => {
-                    if (el.textContent.toLowerCase().includes(searchTerm)) {
-                        const newHtml = html.replace(regex, (match) => `<span class="highlight">${match}</span>`);
-                        el.innerHTML = newHtml;
+        const MainsChart = () => {
+            const chartRef = useRef(null);
 
-                        let parent = el;
-                        while(parent && parent !== document.body) {
-                            if(parent.classList.contains('accordion-content')){
-                                const button = parent.previousElementSibling;
-                                if(button && button.classList.contains('accordion-button')) {
-                                    if(!button.classList.contains('active')) {
-                                       button.classList.add('active');
-                                    }
-                                }
-                            }
-                            parent = parent.parentElement;
-                        }
-                    }
-                });
-                addCheckboxListeners(document.body);
-                loadProgress();
-            }
-
-            searchInput.addEventListener('input', handleSearch);
-
-            const ctx = document.getElementById('mainsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['GS Papers', 'Optional Papers', 'Essay'],
-                    datasets: [{
-                        label: 'Number of Papers',
-                        data: [4, 2, 1],
-                        backgroundColor: [
-                            '#2563eb', // blue-600
-                            '#3b82f6', // blue-500
-                            '#60a5fa'  // blue-400
-                        ],
-                        borderColor: '#ffffff',
-                        borderWidth: 4,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                             labels: {
-                                padding: 20,
-                                font: {
-                                    size: 14,
-                                    family: 'Inter'
-                                }
-                            }
-                        },
-                        tooltip: {
-                             callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed !== null) {
-                                        label += context.parsed + ' paper(s)';
-                                    }
-                                    return label;
+            useEffect(() => {
+                const ctx = chartRef.current.getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['GS Papers', 'Optional Papers', 'Essay'],
+                        datasets: [{
+                            data: [4, 2, 1],
+                            backgroundColor: ['#4f46e5', '#6366f1', '#a5b4fc'],
+                            borderColor: '#1e293b',
+                            borderWidth: 4,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#cbd5e1',
+                                    padding: 20,
+                                    font: { size: 14, family: 'Inter' }
                                 }
                             }
                         }
                     }
-                }
-            });
-
-            function handleScroll() {
-                if (mainContent.scrollTop > 300) {
-                    toTopBtn.classList.add('show');
-                } else {
-                    toTopBtn.classList.remove('show');
-                }
-            }
-            
-            mainContent.addEventListener('scroll', handleScroll);
-            toTopBtn.addEventListener('click', () => {
-                mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-
-            function saveProgress(id, isChecked) {
-                const progress = JSON.parse(localStorage.getItem('upscProgress')) || {};
-                progress[id] = isChecked;
-                localStorage.setItem('upscProgress', JSON.stringify(progress));
-            }
-
-            function loadProgress() {
-                const progress = JSON.parse(localStorage.getItem('upscProgress')) || {};
-                for (const id in progress) {
-                    const checkbox = document.getElementById(id);
-                    if (checkbox) {
-                        checkbox.checked = progress[id];
-                    }
-                }
-            }
-            
-            function addCheckboxListeners(container) {
-                 container.querySelectorAll('.task-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        saveProgress(e.target.id, e.target.checked);
-                    });
                 });
-            }
+                return () => myChart.destroy();
+            }, []);
 
-            addCheckboxListeners(document.body);
-            loadProgress();
-        });
+            return <canvas ref={chartRef}></canvas>;
+        };
+
+        const App = () => {
+            return (
+                <div className="bg-gradient-to-b from-slate-900 to-indigo-900 min-h-screen">
+                    <header className="text-center py-20 px-6 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-grid-slate-800 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0.6))]"></div>
+                        <div className="relative z-10">
+                            <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-4">UPSC Syllabus Explorer</h1>
+                            <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">An interactive, single-page application to help you navigate, track, and master the Civil Services Examination syllabus.</p>
+                        </div>
+                         <img src="https://placehold.co/1200x400/111827/4f46e5?text=Focus" alt="Abstract background image representing focus and study" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none"/>
+                    </header>
+
+                    <main className="container mx-auto px-6 py-10">
+                        <AnimatedSection>
+                            <h2 className="text-4xl font-bold mb-8 text-center text-indigo-300">Preliminary Examination</h2>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                     <h3 className="text-2xl font-semibold mb-4 text-slate-200">Paper I: General Studies</h3>
+                                     {syllabusData.prelims.gs.map(item => (
+                                         <AccordionItem key={item.id} title={item.text} id={item.id}>
+                                             A comprehensive understanding of these topics is crucial for clearing the prelims cut-off.
+                                         </AccordionItem>
+                                     ))}
+                                </div>
+                                <div className="space-y-4">
+                                     <h3 className="text-2xl font-semibold mb-4 text-slate-200">Paper II: CSAT (Qualifying)</h3>
+                                      {syllabusData.prelims.csat.map(item => (
+                                         <AccordionItem key={item.id} title={item.text} id={item.id}>
+                                             This paper tests aptitude and reasoning skills. A minimum of 33% is required to qualify.
+                                         </AccordionItem>
+                                     ))}
+                                </div>
+                            </div>
+                        </AnimatedSection>
+
+                        <AnimatedSection>
+                            <h2 className="text-4xl font-bold mb-8 text-center text-indigo-300">Mains Examination</h2>
+                            <div className="grid lg:grid-cols-5 gap-8">
+                                <div className="lg:col-span-3 space-y-4">
+                                    {syllabusData.mains.map(item => (
+                                        <AccordionItem key={item.id} title={item.title} id={item.id}>
+                                            <p>{item.content}</p>
+                                        </AccordionItem>
+                                    ))}
+                                </div>
+                                <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+                                    <h3 className="text-2xl font-semibold mb-4 text-center">Merit Papers Breakdown</h3>
+                                    <div className="chart-container relative w-full h-80">
+                                        <MainsChart />
+                                    </div>
+                                    <div className="mt-6 text-center text-slate-400">
+                                        <p className="font-semibold text-white">Qualifying Papers (Not in Chart):</p>
+                                        <p>Paper A (Indian Language) & Paper B (English)</p>
+                                    </div>
+                                    <img src="https://placehold.co/400x200/1e293b/a5b4fc?text=Structure" alt="Abstract image representing structure" className="mt-6 rounded-lg opacity-50"/>
+                                </div>
+                            </div>
+                        </AnimatedSection>
+                        
+                        <AnimatedSection>
+                            <h2 className="text-4xl font-bold mb-8 text-center text-indigo-300">Personality Test (Interview)</h2>
+                            <div className="max-w-4xl mx-auto bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-8">
+                                <h3 className="text-2xl font-semibold mb-4 text-center">The Final Stage: 275 Marks</h3>
+                                <p className="text-slate-300 mb-6 text-center">This is an assessment of your personal suitability for a public service career, judging mental caliber, social traits, and interest in current affairs.</p>
+                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-slate-200">
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Mental alertness</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Critical powers of assimilation</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Clear and logical exposition</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Balance of judgement</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Variety and depth of interest</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Social cohesion and leadership</li>
+                                    <li className="flex items-center"><span className="text-indigo-400 mr-3">✔</span> Intellectual and moral integrity</li>
+                                </ul>
+                            </div>
+                        </AnimatedSection>
+                    </main>
+
+                    <footer className="text-center py-10 border-t border-slate-800 text-slate-400">
+                        <p>&copy; 2025 UPSC Syllabus Explorer. Designed to simplify your preparation journey.</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
+
 </body>
 </html>
-
 
