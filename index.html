@@ -49,6 +49,17 @@
             text-decoration: line-through;
             opacity: 0.6;
         }
+        .chatbot-window {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .chat-bubble-user {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .chat-bubble-bot {
+            background-color: #374151;
+            color: #d1d5db;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-white">
@@ -80,12 +91,40 @@
                 ]
             },
             mains: [
-                { id: 'mains-1', title: 'Paper I: Essay', content: 'Candidates will write essays on various topics, focusing on orderly arrangement of ideas and concise writing. Credit is given for effective expression.' },
-                { id: 'mains-2', title: 'Paper II: General Studies I', content: 'Covers Indian Heritage and Culture, History (Modern Indian & World), Geography of the World, and Society.' },
-                { id: 'mains-3', title: 'Paper III: General Studies II', content: 'Covers Governance, Constitution, Polity, Social Justice, and International Relations.' },
-                { id: 'mains-4', title: 'Paper IV: General Studies III', content: 'Covers Technology, Economic Development, Biodiversity, Environment, Security, and Disaster Management.' },
-                { id: 'mains-5', title: 'Paper V: General Studies IV', content: 'Focuses on Ethics, Integrity, and Aptitude, including case studies on these issues.' },
-                { id: 'mains-6', title: 'Papers VI & VII: Optional Subject I & II', content: 'Two papers on one optional subject chosen by the candidate from a prescribed list.' },
+                { id: 'mains-1', title: 'Paper I: Essay', content: [{topic:'Essay Writing', points:['Candidates will write essays on various topics, focusing on orderly arrangement of ideas and concise writing. Credit is given for effective expression.']}] },
+                { id: 'mains-2', title: 'Paper II: General Studies I', content: [
+                    {topic: 'Indian Culture', points: ['Salient aspects of Art Forms, literature, and Architecture from ancient to modern times.']},
+                    {topic: 'Modern Indian History', points: ['From about the middle of the eighteenth century until the present - significant events, personalities, issues.', 'The Freedom Struggle - its various stages and important contributors/contributions from different parts of the country.', 'Post-independence consolidation and reorganization within the country.']},
+                    {topic: 'World History', points: ['Events from the 18th century such as the Industrial Revolution, world wars, redrawal of national boundaries, colonization, decolonization.', 'Political philosophies like communism, capitalism, socialism etc. - their forms and effect on society.']},
+                    {topic: 'Indian Society', points: ['Salient features of Indian Society, Diversity of India.', "Role of women and women's organization, population and associated issues, poverty and developmental issues, urbanization, their problems and their remedies.", 'Effects of globalization on Indian society.', 'Social empowerment, communalism, regionalism & secularism.']},
+                    {topic: 'Geography', points: ["Salient features of world's physical geography.", 'Distribution of key natural resources across the world.', 'Factors responsible for the location of primary, secondary, and tertiary sector industries in various parts of the world.', 'Important Geophysical phenomena such as earthquakes, Tsunami, Volcanic activity, cyclone etc.']}
+                ]},
+                { id: 'mains-3', title: 'Paper III: General Studies II', content: [
+                    {topic: 'Indian Constitution', points: ['Historical underpinnings, evolution, features, amendments, significant provisions and basic structure.', 'Functions and responsibilities of the Union and the States, federal structure issues.', 'Separation of powers, dispute redressal mechanisms.', 'Comparison of the Indian constitutional scheme with that of other countries.']},
+                    {topic: 'Polity', points: ['Parliament and State legislatures—structure, functioning, powers & privileges.', 'Structure and functioning of the Executive and the Judiciary.', 'Salient features of the Representation of People’s Act.', 'Appointment, powers, and responsibilities of various Constitutional Bodies.']},
+                    {topic: 'Governance', points: ['Government policies and interventions for development.', 'Role of NGOs, SHGs, and other groups.', 'Important aspects of governance, transparency, accountability, e-governance, and citizen\'s charters.', 'Role of civil services in a democracy.']},
+                    {topic: 'Social Justice', points: ['Welfare schemes for vulnerable sections.', 'Issues relating to Health, Education, Human Resources.', 'Issues relating to poverty and hunger.']},
+                    {topic: 'International Relations', points: ['India and its neighborhood relations.', 'Bilateral, regional and global groupings and agreements involving India.', 'Effect of policies of developed and developing countries on India\'s interests.', 'Important International institutions, agencies and their structure.']}
+                ]},
+                { id: 'mains-4', title: 'Paper IV: General Studies III', content: [
+                    {topic: 'Indian Economy', points: ['Indian Economy and issues relating to planning, mobilization of resources, growth, development and employment.', 'Inclusive growth and issues arising from it.', 'Government Budgeting.']},
+                    {topic: 'Agriculture', points: ['Major crops-cropping patterns, irrigation systems, storage, transport and marketing of agricultural produce.', 'Issues related to farm subsidies and minimum support prices; Public Distribution System.', 'Food processing and related industries in India.', 'Land reforms in India.']},
+                    {topic: 'Economy & Infrastructure', points: ['Effects of liberalization on the economy.', 'Infrastructure: Energy, Ports, Roads, Airports, Railways etc.', 'Investment models.']},
+                    {topic: 'Science & Technology', points: ['Developments and their applications and effects in everyday life.', 'Achievements of Indians in S&T; indigenization of technology.', 'Awareness in IT, Space, Computers, robotics, nano-technology, bio-technology and IPR.']},
+                    {topic: 'Environment & Disaster Management', points: ['Conservation, environmental pollution and degradation, environmental impact assessment.', 'Disaster and disaster management.']},
+                    {topic: 'Security', points: ['Linkages between development and spread of extremism.', 'Challenges to internal security (external state and non-state actors, cyber security, money-laundering).', 'Security challenges in border areas.', 'Various Security forces and agencies and their mandate.']}
+                ]},
+                { id: 'mains-5', title: 'Paper V: General Studies IV', content: [
+                    {topic: 'Ethics and Human Interface', points: ['Essence, determinants and consequences of Ethics in human actions; dimensions of ethics; ethics in private and public relationships.', 'Human Values - lessons from lives and teachings of great leaders, reformers and administrators.']},
+                    {topic: 'Attitude', points: ['Content, structure, function; its influence and relation with thought and behaviour; moral and political attitudes; social influence and persuasion.']},
+                    {topic: 'Aptitude & Foundational Values', points: ['Integrity, impartiality and non-partisanship, objectivity, dedication to public service, empathy, tolerance and compassion towards the weaker-sections.']},
+                    {topic: 'Emotional Intelligence', points: ['Concepts, and their utilities and application in administration and governance.']},
+                    {topic: 'Moral Thinkers & Philosophers', points: ['Contributions of moral thinkers and philosophers from India and the world.']},
+                    {topic: 'Ethics in Public Administration', points: ['Status and problems; ethical concerns and dilemmas; laws, rules, regulations as sources of ethical guidance; accountability and ethical governance.', 'Ethical issues in international relations and funding; corporate governance.']},
+                    {topic: 'Probity in Governance', points: ['Concept of public service; philosophical basis of governance and probity; Right to Information, Codes of Ethics, Codes of Conduct, Citizen\'s Charters.', 'Challenges of corruption.']},
+                    {topic: 'Case Studies', points: ['Case studies on the above issues.']}
+                ]},
+                { id: 'mains-6', title: 'Papers VI & VII: Optional Subject I & II', content: [{topic: 'Optional Subject', points:['Two papers on one optional subject chosen by the candidate from a prescribed list. This requires specialized and deep knowledge of the subject.']}] },
             ]
         };
 
@@ -104,11 +143,7 @@
                 return () => observer.disconnect();
             }, []);
 
-            return (
-                <div ref={domRef} className={`fade-in-section ${isVisible ? 'is-visible' : ''} mb-16`}>
-                    {children}
-                </div>
-            );
+            return <div ref={domRef} className={`fade-in-section ${isVisible ? 'is-visible' : ''} mb-16`}>{children}</div>;
         };
         
         const AccordionItem = ({ title, children, id }) => {
@@ -117,15 +152,12 @@
             
             useEffect(() => {
                 const savedState = localStorage.getItem(`progress_${id}`);
-                if (savedState) {
-                    setIsChecked(JSON.parse(savedState));
-                }
+                if (savedState) setIsChecked(JSON.parse(savedState));
             }, [id]);
 
             const handleToggle = () => setIsOpen(!isOpen);
-
             const handleCheckboxChange = (e) => {
-                e.stopPropagation(); // Prevent accordion from toggling
+                e.stopPropagation();
                 const checked = e.target.checked;
                 setIsChecked(checked);
                 localStorage.setItem(`progress_${id}`, JSON.stringify(checked));
@@ -141,7 +173,7 @@
                         <span className="arrow text-indigo-400 text-2xl transform">▼</span>
                     </button>
                     <div className="accordion-content">
-                        <div className="px-5 pb-5 pt-2 text-slate-300 border-t border-slate-700">
+                        <div className="px-5 pb-5 pt-4 text-slate-300 border-t border-slate-700">
                             {children}
                         </div>
                     </div>
@@ -151,42 +183,88 @@
 
         const MainsChart = () => {
             const chartRef = useRef(null);
-
             useEffect(() => {
                 const ctx = chartRef.current.getContext('2d');
                 const myChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['GS Papers', 'Optional Papers', 'Essay'],
-                        datasets: [{
-                            data: [4, 2, 1],
-                            backgroundColor: ['#4f46e5', '#6366f1', '#a5b4fc'],
-                            borderColor: '#1e293b',
-                            borderWidth: 4,
-                            hoverOffset: 10
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: '#cbd5e1',
-                                    padding: 20,
-                                    font: { size: 14, family: 'Inter' }
-                                }
-                            }
-                        }
-                    }
+                    type: 'doughnut', data: { labels: ['GS Papers', 'Optional Papers', 'Essay'], datasets: [{ data: [4, 2, 1], backgroundColor: ['#4f46e5', '#6366f1', '#a5b4fc'], borderColor: '#1e293b', borderWidth: 4, hoverOffset: 10 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', padding: 20, font: { size: 14, family: 'Inter' } } } } }
                 });
                 return () => myChart.destroy();
             }, []);
-
             return <canvas ref={chartRef}></canvas>;
         };
+
+        const Chatbot = () => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [messages, setMessages] = useState([{ sender: 'bot', text: 'Hi! How can I help you with the UPSC syllabus today?' }]);
+            const [userInput, setUserInput] = useState('');
+            const chatBodyRef = useRef(null);
+
+            const qaPairs = {
+                'prelims': 'The Preliminary Exam has two papers: General Studies (GS) Paper I and CSAT Paper II. GS marks are for cut-off, and CSAT is qualifying (33%).',
+                'mains': 'The Mains Exam is descriptive and has 9 papers. 2 are qualifying language papers, and 7 are counted for merit (4 GS, 2 Optional, 1 Essay).',
+                'interview': 'The Personality Test (Interview) is the final stage. It carries 275 marks and assesses your suitability for public service.',
+                'csat': 'CSAT (Paper II) is a qualifying paper with questions on comprehension, reasoning, and basic numeracy. You need to score at least 33% to pass.',
+                'optional': 'You need to choose one optional subject from a list provided by UPSC. It consists of two papers (Paper I & II) for a total of 500 marks.',
+                'essay': 'The Essay paper is 250 marks. You have to write two essays on given topics, testing your ability to express ideas coherently and concisely.',
+                'negative marking': 'Yes, there is negative marking in the Preliminary Exam. For each wrong answer, one-third (0.33) of the marks assigned to that question will be deducted.'
+            };
+            
+            useEffect(() => {
+                if(chatBodyRef.current) {
+                    chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+                }
+            }, [messages]);
+
+            const handleSendMessage = (e) => {
+                e.preventDefault();
+                const userText = userInput.trim().toLowerCase();
+                if (!userText) return;
+
+                const newMessages = [...messages, { sender: 'user', text: userInput }];
+                
+                let botResponse = "I'm not sure how to answer that. Try asking about 'prelims', 'mains', 'interview', 'csat', 'optional', 'essay', or 'negative marking'.";
+                for (const keyword in qaPairs) {
+                    if (userText.includes(keyword)) {
+                        botResponse = qaPairs[keyword];
+                        break;
+                    }
+                }
+                
+                setMessages([...newMessages, { sender: 'bot', text: botResponse }]);
+                setUserInput('');
+            };
+
+            return (
+                <div>
+                    <div className={`chatbot-window fixed bottom-24 right-5 w-80 h-96 bg-gray-800 rounded-lg shadow-2xl flex flex-col z-50 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                        <div className="p-3 bg-gray-900 text-center font-semibold rounded-t-lg">UPSC Syllabus Helper</div>
+                        <div ref={chatBodyRef} className="flex-1 p-3 space-y-3 overflow-y-auto">
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`rounded-lg px-3 py-2 max-w-xs ${msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-700">
+                            <input 
+                                type="text"
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                placeholder="Ask a question..."
+                                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                        </form>
+                    </div>
+                    <button onClick={() => setIsOpen(!isOpen)} className="fixed bottom-5 right-5 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500 z-50">
+                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </button>
+                </div>
+            );
+        };
+
 
         const App = () => {
             return (
@@ -225,24 +303,33 @@
 
                         <AnimatedSection>
                             <h2 className="text-4xl font-bold mb-8 text-center text-indigo-300">Mains Examination</h2>
-                            <div className="grid lg:grid-cols-5 gap-8">
-                                <div className="lg:col-span-3 space-y-4">
-                                    {syllabusData.mains.map(item => (
-                                        <AccordionItem key={item.id} title={item.title} id={item.id}>
-                                            <p>{item.content}</p>
-                                        </AccordionItem>
-                                    ))}
+                            <div className="space-y-4">
+                                {syllabusData.mains.map(item => (
+                                    <AccordionItem key={item.id} title={item.title} id={item.id}>
+                                        <div className="space-y-4">
+                                            {item.content.map((section, index) => (
+                                                <div key={index}>
+                                                    <h4 className="font-semibold text-indigo-300 mb-2">{section.topic}</h4>
+                                                    <ul className="list-disc list-inside space-y-1 pl-2 text-slate-400">
+                                                        {section.points.map((point, pIndex) => <li key={pIndex}>{point}</li>)}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionItem>
+                                ))}
+                            </div>
+                        </AnimatedSection>
+
+                         <AnimatedSection>
+                             <div className="max-w-3xl mx-auto bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
+                                <h3 className="text-2xl font-semibold mb-4 text-center">Merit Papers Breakdown</h3>
+                                <div className="chart-container relative w-full h-80">
+                                    <MainsChart />
                                 </div>
-                                <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-lg p-6">
-                                    <h3 className="text-2xl font-semibold mb-4 text-center">Merit Papers Breakdown</h3>
-                                    <div className="chart-container relative w-full h-80">
-                                        <MainsChart />
-                                    </div>
-                                    <div className="mt-6 text-center text-slate-400">
-                                        <p className="font-semibold text-white">Qualifying Papers (Not in Chart):</p>
-                                        <p>Paper A (Indian Language) & Paper B (English)</p>
-                                    </div>
-                                    <img src="https://placehold.co/400x200/1e293b/a5b4fc?text=Structure" alt="Abstract image representing structure" className="mt-6 rounded-lg opacity-50"/>
+                                <div className="mt-6 text-center text-slate-400">
+                                    <p className="font-semibold text-white">Qualifying Papers (Not in Chart):</p>
+                                    <p>Paper A (Indian Language) & Paper B (English)</p>
                                 </div>
                             </div>
                         </AnimatedSection>
@@ -268,6 +355,7 @@
                     <footer className="text-center py-10 border-t border-slate-800 text-slate-400">
                         <p>&copy; 2025 UPSC Syllabus Explorer. Designed to simplify your preparation journey.</p>
                     </footer>
+                    <Chatbot />
                 </div>
             );
         };
